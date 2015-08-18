@@ -1,17 +1,21 @@
 {
-  "newStorageAccountName": {
-    "value": "binxiarmsbtest"
-  },
-  "adminUsername": {
-    "value": "azureuser"
-  },
-  "adminPassword": {
-    "value": "User@123"
-  },
-  "dnsNameForPublicIP": {
-    "value": "binxiarmsbtest"
-  },
-  "ubuntuOSVersion": {
-    "value": "14.04.2-LTS"
-  }
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newStorageAccountName": {
+          "value": "binxiarmsbtest"
+        },
+        "adminUsername": {
+          "value": "azureuser"
+        },
+        "adminPassword": {
+          "value": "User@123"
+        },
+        "dnsNameForPublicIP": {
+          "value": "binxiarmsbtest"
+        },
+        "ubuntuOSVersion": {
+          "value": "14.04.2-LTS"
+        }
+   }
 }
