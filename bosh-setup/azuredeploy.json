@@ -138,8 +138,8 @@
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
     "ubuntuOSVersion": "14.04.2-LTS",
-    "repository": "Azure",
-    "branch": "master",
+    "repository": "bingosummer",
+    "branch": "bosh-setup-for-GA",
     "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
     "cloudfoundryBlob": "http://cloudfoundry.blob.core.windows.net/misc/"
   },
