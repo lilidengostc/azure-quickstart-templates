@@ -247,17 +247,22 @@
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "OSPatchingForLinux",
-        "typeHandlerVersion": "1.0",
-        "settings": {},
-        "protectedSettings": {
-          "disabled": "False",
-          "stop": "False",
-          "rebootAfterPatch": "[parameters('rebootAfterPatch')]",
+        "typeHandlerVersion": "2.0",
+        "settings": {
+          "disabled": false,
+          "stop": false,
+          "rebootAfterPatch": "RebootIfNeed",
+          "category": "Important",
+          "installDuration": "01:00",
+          "oneoff": false,
           "intervalOfWeeks": "1",
-          "dayOfWeek": "[parameters('dayOfWeek')]",
-          "startTime": "[parameters('startTime')]",
-          "category": "[parameters('category')]",
-          "installDuration": "00:30"
+          "dayOfWeek": "Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Everyday",
+          "startTime": "02:23",
+          "vmStatusTest": {
+            "local": false
+          }
+        },
+        "protectedSettings": {
         }
       }
     }
