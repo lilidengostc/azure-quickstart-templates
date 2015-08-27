@@ -239,7 +239,7 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmName'),'/installospatching')]",
-      "apiVersion": "2014-12-01-preview",
+      "apiVersion": "2015-05-01-preview",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
@@ -248,21 +248,15 @@
         "publisher": "Microsoft.OSTCExtensions",
         "type": "OSPatchingForLinux",
         "typeHandlerVersion": "2.0",
-        "settings": {
-          "disabled": false,
-          "stop": false,
-          "rebootAfterPatch": "RebootIfNeed",
-          "category": "Important",
-          "installDuration": "01:00",
-          "oneoff": false,
-          "intervalOfWeeks": "1",
-          "dayOfWeek": "Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Everyday",
-          "startTime": "02:23",
-          "vmStatusTest": {
-            "local": false
-          }
-        },
         "protectedSettings": {
+          "disabled": "False",
+          "stop": "False",
+          "installDuration": "00:30",
+          "intervalOfWeeks": "1",
+          "dayOfWeek": "Monday|Thursday",
+          "startTime": "04:00",
+          "rebootAfterPatch": "Required",
+          "category": "Important"
         }
       }
     }
