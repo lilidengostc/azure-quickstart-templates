@@ -267,20 +267,9 @@
             "vhd": {
               "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
             },
-            "caching": "ReadWrite",
+            "caching": "ReadOnly",
             "createOption": "FromImage"
-          },
-          "dataDisks": [
-            {
-              "name": "datadisk1",
-              "diskSizeGB": "30",
-              "lun": 0,
-              "createOption": "empty",
-              "vhd": {
-                "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'datadisk1.vhd')]"
-              }
-            }
-          ]
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
