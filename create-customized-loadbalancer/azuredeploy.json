@@ -1,0 +1,207 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "allowedValues": [
+        "East Asia",
+        "Southeast Asia",
+        "Central US",
+        "East US",
+        "East US 2",
+        "West US",
+        "North Central US",
+        "South Central US",
+        "North Europe",
+        "West Europe",
+        "Japan West",
+        "Japan East",
+        "Brazil South",
+        "Australia East",
+        "Australia Southeast"
+      ],
+      "metadata": {
+        "description": "Location to deploy to"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "boshvnet",
+      "metadata": {
+        "description": "Name of the virtual network"
+      }
+    },
+    "addressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "address prefix"
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "CloudFoundry",
+      "metadata": {
+        "description": "Name of the subnet"
+      }
+    },
+    "subnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "Subnet prefix"
+      }
+    },
+    "loadBalancerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the load balancer"
+      }
+    },
+    "privateIpAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Private IP address for the front end IP pool"
+      }
+    },
+    "protocolForProbes": {
+      "type": "string",
+      "defaultValue": "Tcp",
+      "allowedValues": [
+        "Tcp",
+        "Udp"
+      ],
+      "metadata": {
+        "description": "Protocol for probes"
+      }
+    },
+    "portForProbes": {
+      "type": "int",
+      "defaultValue": 22,
+      "metadata": {
+        "description": "Port for probes"
+      }
+    },
+    "intervalInSecondsForProbes": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Interval in seconds for probes"
+      }
+    },
+    "numberOfProbes": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Port for probes"
+      }
+    },
+    "protocolForRules": {
+      "type": "string",
+      "defaultValue": "Tcp",
+      "allowedValues": [
+        "Tcp",
+        "Udp"
+      ],
+      "metadata": {
+        "description": "Protocol for load balancer rules"
+      }
+    },
+    "idleTimeoutInMinutesForRules": {
+      "type": "int",
+      "defaultValue": 15,
+      "metadata": {
+        "description": "Idle timeout in minutes for load balancer rules"
+      }
+    },
+    "loadBalancerRules": {
+      "type": "string",
+      "defaultValue": "22:22",
+      "metadata": {
+        "description": "Protocol for load balancer rules"
+      }
+    }
+  },
+  "variables": {
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworkName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "name": "[parameters('loadBalancerName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[parameters('location')]",
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "loadBalancerFrontEnd",
+            "properties": {
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "loadBalancerBackEnd"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "Name": "lbrule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/frontendIpConfigurations/loadBalancerFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/loadBalancerBackEnd')]"
+              },
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/probes/lbprobe')]"
+              },
+              "protocol": "[parameters('protocolForRules')]",
+              "frontendPort": "[split(parameters('loadBalancerRules'), ':')[0]]",
+              "backendPort": "[split(parameters('loadBalancerRules'), ':')[1]]",
+              "idleTimeoutInMinutes": "[parameters('idleTimeoutInMinutesForRules')]"
+            }
+          }
+        ],
+        "probes": [
+          {
+            "properties": {
+              "protocol": "[parameters('protocolForProbes')]",
+              "port": "[parameters('portForProbes')]",
+              "intervalInSeconds": "[parameters('intervalInSecondsForProbes')]",
+              "numberOfProbes": "[parameters('numberOfProbes')]"
+            },
+            "name": "lbprobe"
+          }
+        ]
+      }
+    }
+  ]
+}
