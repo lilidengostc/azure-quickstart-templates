@@ -42,8 +42,8 @@ call("sh create_cert.sh", shell=True)
 call("cp bosh.key ./bosh/bosh", shell=True)
 with open ('bosh_cert.pem', 'r') as tmpfile:
     ssh_cert = tmpfile.read()
-ssh_cert = "|\n" + ssh_cert
-ssh_cert="\n        ".join([line for line in ssh_cert.split('\n')])
+indentation = " " * 8
+ssh_cert=("\n"+indentation).join([line for line in ssh_cert.split('\n')])
 
 # Render the yml template for bosh-init
 bosh_template = 'bosh.yml'

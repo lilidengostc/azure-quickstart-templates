@@ -101,13 +101,13 @@ jobs:
       environment: AzureCloud
       subscription_id: SUBSCRIPTION-ID # <--- Replace with your subscription id
       storage_account_name: STORAGE-ACCOUNT-NAME # <--- Replace with your storage account name
-      storage_access_key: STORAGE-ACCESS-KEY # <--- Replace with the access key of your storage account
       resource_group_name: RESOURCE-GROUP-NAME # <--- Replace with your resource group name
       tenant_id: TENANT-ID # <--- Replace with your tenant id of the service principal
       client_id: CLIENT-ID # <--- Replace with your client id of the service principal
       client_secret: CLIENT-SECRET # <--- Replace with your client secret of the service principal
       ssh_user: vcap
-      ssh_certificate: SSH-CERTIFICATE # <--- Replace with the content of your ssh certificate
+      ssh_certificate: |
+        SSH-CERTIFICATE # <--- Replace with the content of your ssh certificate
 
     agent: {mbus: "nats://nats:nats-password@10.0.0.4:4222"}
 
