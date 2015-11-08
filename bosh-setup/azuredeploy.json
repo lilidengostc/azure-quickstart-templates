@@ -98,7 +98,7 @@
     }
   },
   "variables": {
-    "api-version": "2015-05-01-preview",
+    "apiVersion": "2015-06-15",
     "location": "[resourceGroup().location]",
     "storageAccountType": "Standard_GRS",
     "vmStorageAccountContainerName": "vhds",
@@ -125,14 +125,14 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('newStorageAccountName')]",
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
       "properties": {
         "accountType": "[variables('storageAccountType')]"
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(parameters('vmName'),'-devbox')]",
       "location": "[variables('location')]",
@@ -144,7 +144,7 @@
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(parameters('vmName'),'-bosh')]",
       "location": "[variables('location')]",
@@ -153,7 +153,7 @@
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(parameters('vmName'), '-cf')]",
       "location": "[variables('location')]",
@@ -162,7 +162,7 @@
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[variables('location')]",
@@ -189,7 +189,7 @@
       }
     },
     {
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('nicName')]",
       "location": "[variables('location')]",
@@ -216,7 +216,7 @@
       }
     },
     {
-      "apiversion": "[variables('api-version')]",
+      "apiversion": "[variables('apiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
       "location": "[variables('location')]",
@@ -261,7 +261,7 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('vmName'),'/initdevbox')]",
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
@@ -280,7 +280,7 @@
           "SUBNET-NAME-FOR-CF": "[variables('subnet2Name')]",
           "SUBSCRIPTION-ID": "[subscription().subscriptionId]",
           "STORAGE-ACCOUNT-NAME": "[parameters('newStorageAccountName')]",
-          "STORAGE-ACCESS-KEY": "[listKeys(variables('storageid'),variables('api-version')).key1]",
+          "STORAGE-ACCESS-KEY": "[listKeys(variables('storageid'),variables('apiVersion')).key1]",
           "RESOURCE-GROUP-NAME": "[resourceGroup().name]",
           "TENANT-ID": "[parameters('tenantID')]",
           "CLIENT-ID": "[parameters('clientID')]",
