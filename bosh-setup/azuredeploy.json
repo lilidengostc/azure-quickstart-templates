@@ -15,11 +15,25 @@
         "description": "name of the virtual network"
       }
     },
+    "virtualNetworkAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "address prefix of the virtual network"
+      }
+    },
     "subnetNameForBosh": {
       "type": "string",
       "defaultValue": "Bosh",
       "metadata": {
         "description": "name of the subnet for Bosh"
+      }
+    },
+    "subnetAddressPrefixForBosh": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "address prefix of the subnet for Bosh"
       }
     },
     "subnetNameForCloudFoundry": {
@@ -29,8 +43,16 @@
         "description": "name of the subnet for CloudFoundy"
       }
     },
+    "subnetAddressPrefixForCloudFoundry": {
+      "type": "string",
+      "defaultValue": "10.0.16.0/24",
+      "metadata": {
+        "description": "address prefix of the subnet for CloudFoundy"
+      }
+    },
     "vmName": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
         "description": "name of the vm, will be used as DNS Name for the Public IP used to access the Virtual Machine"
       }
@@ -54,12 +76,14 @@
     },
     "adminUsername": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
         "description": "User name for the Virtual Machine."
       }
     },
     "adminPassword": {
       "type": "securestring",
+      "defaultValue": "",
       "metadata": {
         "description": "Password for the Virtual Machine."
       }
@@ -98,196 +122,99 @@
     }
   },
   "variables": {
-    "api-version": "2015-06-15",
-    "location": "[resourceGroup().location]",
-    "storageAccountType": "Standard_GRS",
-    "vmStorageAccountContainerName": "vhds",
-    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', parameters('newStorageAccountName'))]",
-    "virtualNetworkName": "[parameters('virtualNetworkName')]",
-    "addressPrefix": "10.0.0.0/16",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "subnet1Name": "[parameters('subnetNameForBosh')]",
-    "subnet1Prefix": "10.0.0.0/24",
-    "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
-    "subnet2Name": "[parameters('subnetNameForCloudFoundry')]",
-    "subnet2Prefix": "10.0.16.0/24",
-    "nicName": "[parameters('vmName')]",
-    "devboxPrivateIPAddress": "10.0.0.100",
-    "devboxPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'),'-devbox'))]",
-    "imagePublisher": "Canonical",
-    "imageOffer": "UbuntuServer",
-    "ubuntuOSVersion": "14.04.2-LTS",
+    "api-version": "2015-01-01",
     "repository": "Azure",
     "branch": "master",
-    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]"
+    "templateBaseUrl": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
+    "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
+    "devboxTemplateUrl": "[concat(variables('templateBaseUrl'), 'devbox-resources.json')]"
   },
   "resources": [
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('newStorageAccountName')]",
+      "name": "environment",
+      "type": "Microsoft.Resources/deployments",
       "apiVersion": "[variables('api-version')]",
-      "location": "[variables('location')]",
       "properties": {
-        "accountType": "[variables('storageAccountType')]"
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('vmName'),'-devbox')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('vmName')]"
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('sharedTemplateUrl')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "newStorageAccountName": {
+            "value": "[parameters('newStorageAccountName')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "virtualNetworkAddressPrefix": {
+            "value": "[parameters('virtualNetworkAddressPrefix')]"
+          },
+          "subnetNameForBosh": {
+            "value": "[parameters('subnetNameForBosh')]"
+          },
+          "subnetAddressPrefixForBosh": {
+            "value": "[parameters('subnetAddressPrefixForBosh')]"
+          },
+          "subnetNameForCloudFoundry": {
+            "value": "[parameters('subnetNameForCloudFoundry')]"
+          },
+          "subnetAddressPrefixForCloudFoundry": {
+            "value": "[parameters('subnetAddressPrefixForCloudFoundry')]"
+          }
         }
       }
     },
     {
+      "name": "devbox",
+      "type": "Microsoft.Resources/deployments",
       "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('vmName'),'-bosh')]",
-      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'environment')]"
+      ],
       "properties": {
-        "publicIPAllocationMethod": "static"
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('vmName'), '-cf')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "static"
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('virtualNetworkName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('devboxTemplateUrl')]",
+          "contentVersion": "1.0.0.0"
         },
-        "subnets": [
-          {
-            "name": "[variables('subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[variables('subnet1Prefix')]"
+        "parameters": {
+          "commonSettings": {
+            "value": {
+              "templateBaseUrl": "[variables('templateBaseUrl')]",
+              "virtualNetworkName": "[parameters('virtualNetworkName')]",
+              "subnetNameForBosh": "[parameters('subnetNameForBosh')]",
+              "subnetNameForCloudFoundry": "[parameters('subnetNameForCloudFoundry')]",
+              "cloudfoundryIP": "[reference('environment').outputs.cloudfoundryIP.value]"
             }
           },
-          {
-            "name": "[variables('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[variables('subnet2Prefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "[variables('api-version')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('nicName')]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('vmName'), '-devbox')]",
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Static",
-              "privateIPAddress": "[variables('devboxPrivateIPAddress')]",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(parameters('vmName'),'-devbox'))]"
-              },
-              "subnet": {
-                "id": "[variables('subnet1Ref')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiversion": "[variables('api-version')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "[parameters('vmName')]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/',parameters('newStorageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/',variables('nicName'))]"
-      ],
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
-        },
-        "osProfile": {
-          "computername": "[parameters('vmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
-            "sku": "[variables('ubuntuOSVersion')]",
-            "version": "latest"
+          "newStorageAccountName": {
+            "value": "[parameters('newStorageAccountName')]"
           },
-          "osDisk": {
-            "name": "osdisk",
-            "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
-            },
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
+          "vmName": {
+            "value": "[parameters('vmName')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "enableDNSOnDevbox": {
+            "value": "[parameters('enableDNSOnDevbox')]"
+          },
+          "tenantID": {
+            "value": "[parameters('tenantID')]"
+          },
+          "clientID": {
+            "value": "[parameters('clientID')]"
+          },
+          "clientSecret": {
+            "value": "[parameters('clientSecret')]"
           }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmName'),'/initdevbox')]",
-      "apiVersion": "[variables('api-version')]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-      ],
-      "properties": {
-        "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
-        "settings": {
-          "fileUris": [
-            "[concat(variables('githubPath'),'launch_script.sh')]"
-          ],
-          "commandToExecute": "[concat('sh launch_script.sh',' ',variables('githubPath'))]",
-          "VNET-NAME": "[variables('virtualNetworkName')]",
-          "SUBNET-NAME": "[variables('subnet1Name')]",
-          "SUBNET-NAME-FOR-CF": "[variables('subnet2Name')]",
-          "SUBSCRIPTION-ID": "[subscription().subscriptionId]",
-          "STORAGE-ACCOUNT-NAME": "[parameters('newStorageAccountName')]",
-          "STORAGE-ACCESS-KEY": "[listKeys(variables('storageid'),variables('api-version')).key1]",
-          "RESOURCE-GROUP-NAME": "[resourceGroup().name]",
-          "TENANT-ID": "[parameters('tenantID')]",
-          "CLIENT-ID": "[parameters('clientID')]",
-          "CLIENT-SECRET": "[parameters('clientSecret')]",
-          "cf-ip": "[reference(concat(parameters('vmName'),'-cf')).ipAddress]",
-          "username": "[parameters('adminUserName')]",
-          "enable-dns": "[parameters('enableDNSOnDevbox')]"
         }
       }
     }

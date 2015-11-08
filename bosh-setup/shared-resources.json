@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newStorageAccountName": {
+      "type": "string"
+    },
+    "virtualNetworkName": {
+      "type": "string"
+    },
+    "virtualNetworkAddressPrefix": {
+      "type": "string"
+    },
+    "subnetNameForBosh": {
+      "type": "string"
+    },
+    "subnetAddressPrefixForBosh": {
+      "type": "string"
+    },
+    "subnetNameForCloudFoundry": {
+      "type": "string"
+    },
+    "subnetAddressPrefixForCloudFoundry": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "api-version": "2015-06-15",
+    "location": "[resourceGroup().location]",
+    "storageAccountType": "Standard_GRS"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('newStorageAccountName')]",
+      "apiVersion": "[variables('api-version')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "bosh",
+      "location": "[variables('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "static"
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "cloudfoundry",
+      "location": "[variables('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "static"
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworkName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('virtualNetworkAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetNameForBosh')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetAddressPrefixForBosh')]"
+            }
+          },
+          {
+            "name": "[parameters('subnetNameForCloudFoundry')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetAddressPrefixForCloudFoundry')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "cloudfoundryIP": {
+      "value": "[reference('cloudfoundry').ipAddress]",
+      "type": "string"
+    }
+  }
+}

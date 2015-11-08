@@ -1,0 +1,170 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "commonSettings": {
+      "type": "object"
+    },
+    "newStorageAccountName": {
+      "type": "string"
+    },
+    "vmName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string"
+    },
+    "adminUsername": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "enableDNSOnDevbox": {
+      "type": "bool"
+    },
+    "tenantID": {
+      "type": "string"
+    },
+    "clientID": {
+      "type": "string"
+    },
+    "clientSecret": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "api-version": "2015-06-15",
+    "location": "[resourceGroup().location]",
+    "vmStorageAccountContainerName": "vhds",
+    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', parameters('newStorageAccountName'))]",
+    "vnetName": "[parameters('commonSettings').virtualNetworkName]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+    "subnetNameForBosh": "[parameters('commonSettings').subnetNameForBosh]",
+    "subnetNameForCloudFoundry": "[parameters('commonSettings').subnetNameForCloudFoundry]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetNameForBosh'))]",
+    "cloudfoundryPublicIPName": "cloudfoundry",
+    "nicName": "[parameters('vmName')]",
+    "devboxPrivateIPAddress": "10.0.0.100",
+    "devboxPublicIPName": "devbox",
+    "devboxPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('devboxPublicIPName'))]",
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "ubuntuOSVersion": "14.04.2-LTS"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('devboxPublicIPName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('vmName')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('devboxPublicIPName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('devboxPrivateIPAddress')]",
+              "publicIPAddress": {
+                "id": "[variables('devboxPublicIPAddressID')]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiversion": "[variables('api-version')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('vmName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('ubuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmName'),'/initdevbox')]",
+      "apiVersion": "[variables('api-version')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.2",
+        "settings": {
+          "fileUris": [
+            "[concat(parameters('commonSettings').templateBaseUrl,'launch_script.sh')]"
+          ],
+          "commandToExecute": "[concat('sh launch_script.sh',' ',parameters('commonSettings').templateBaseUrl)]",
+          "VNET-NAME": "[variables('vnetName')]",
+          "SUBNET-NAME": "[variables('subnetNameForBosh')]",
+          "SUBNET-NAME-FOR-CF": "[variables('subnetNameForCloudFoundry')]",
+          "SUBSCRIPTION-ID": "[subscription().subscriptionId]",
+          "STORAGE-ACCOUNT-NAME": "[parameters('newStorageAccountName')]",
+          "STORAGE-ACCESS-KEY": "[listKeys(variables('storageid'),variables('api-version')).key1]",
+          "RESOURCE-GROUP-NAME": "[resourceGroup().name]",
+          "TENANT-ID": "[parameters('tenantID')]",
+          "CLIENT-ID": "[parameters('clientID')]",
+          "CLIENT-SECRET": "[parameters('clientSecret')]",
+          "cf-ip": "[parameters('commonSettings').cloudfoundryIP]",
+          "username": "[parameters('adminUserName')]",
+          "enable-dns": "[parameters('enableDNSOnDevbox')]"
+        }
+      }
+    }
+  ]
+}
