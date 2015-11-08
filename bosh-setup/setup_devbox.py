@@ -64,7 +64,7 @@ call("chmod 400 {0}/bosh".format(home_dir), shell=True)
 
 # Install bosh_cli and bosh-init
 #call("rm -r /tmp; mkdir /mnt/tmp; ln -s /mnt/tmp /tmp; chmod 777 /mnt/tmp; chmod 777 /tmp", shell=True)
-call("mkdir /mnt/bosh_install; cp init.sh /mnt/bosh_install; cd /mnt/bosh_install; sh init.sh >{0} 2>&1;".format(install_log), shell=True)
+call("mkdir /mnt/bosh_install; cp init.sh /mnt/bosh_install; cd /mnt/bosh_install; chmod +x init.sh; ./init.sh >{0} 2>&1;".format(install_log), shell=True)
 
 # Setup the devbox as a DNS
 enable_dns = settings["enable-dns"]
