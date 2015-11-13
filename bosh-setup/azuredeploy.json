@@ -139,7 +139,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[parameters('vmName')]"
+          "domainNameLabel": "[toLower(parameters('vmName'))]"
         }
       }
     },
