@@ -116,8 +116,8 @@
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
     "ubuntuOSVersion": "14.04.3-LTS",
-    "repository": "Azure",
-    "branch": "master",
+    "repository": "bingosummer",
+    "branch": "Add-Concourse-CI-template",
     "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/concourse-ci/')]"
   },
   "resources": [
