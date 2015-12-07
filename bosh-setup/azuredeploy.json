@@ -8,23 +8,6 @@
         "description": "name of the vm, will be used as DNS Name for the Public IP used to access the Virtual Machine"
       }
     },
-    "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_D1",
-      "allowedValues": [
-        "Standard_A1",
-        "Standard_A2",
-        "Standard_A3",
-        "Standard_A4",
-        "Standard_D1",
-        "Standard_D2",
-        "Standard_D3",
-        "Standard_D4"
-      ],
-      "metadata": {
-        "description": "Size of vm"
-      }
-    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -85,6 +68,7 @@
     "subnetAddressPrefixForCloudFoundry": "10.0.16.0/20",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRefForBosh": "[concat(variables('vnetID'),'/subnets/', variables('subnetNameForBosh'))]",
+    "vmSize": "Standard_D1",
     "nicName": "[parameters('vmName')]",
     "devboxPrivateIPAddress": "10.0.0.100",
     "devboxPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', 'devbox')]",
@@ -200,7 +184,7 @@
       ],
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
+          "vmSize": "[variables('vmSize')]"
         },
         "osProfile": {
           "computername": "[parameters('vmName')]",
