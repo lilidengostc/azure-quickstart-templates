@@ -20,17 +20,6 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "enableDNSOnDevbox": {
-      "type": "bool",
-      "defaultValue": true,
-      "allowedValues": [
-        true,
-        false
-      ],
-      "metadata": {
-        "description": "A default DNS will be setup in the devbox if it is true."
-      }
-    },
     "tenantID": {
       "type": "string",
       "defaultValue": "TENANT-ID",
