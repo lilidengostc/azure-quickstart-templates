@@ -40,6 +40,24 @@
       "metadata": {
         "description": "secret of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
       }
+    },
+    "azureDNS": {
+      "type": "string",
+      "defaultValue": "disabled",
+      "allowedValues": [
+        "enabled",
+        "disabled"
+      ],
+      "metadata": {
+        "description": "The flag allowing to enable or disable Azure DNS."
+      }
+    },
+    "systemDomainName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "name of the system domain."
+      }
     }
   },
   "variables": {
@@ -66,7 +84,8 @@
     "ubuntuOSVersion": "14.04.3-LTS",
     "repository": "Azure",
     "branch": "master",
-    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]"
+    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
+    "azureDNSTemplateUrl": "[concat(variables('githubPath'), 'azuredns-resources-', parameters('azureDNS'), '.json')]"
   },
   "resources": [
     {
@@ -234,6 +253,29 @@
           "CLIENT-SECRET": "[parameters('clientSecret')]",
           "cf-ip": "[reference('cloudfoundry').ipAddress]",
           "username": "[parameters('adminUserName')]"
+        }
+      }
+    },
+    {
+      "name": "azuredns",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', 'cloudfoundry')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('azureDNSTemplateUrl')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "newZoneName": {
+            "value": "[parameters('systemDomainName')]" 
+          },
+          "ipv4Address": {
+            "value": "[reference('cloudfoundry').ipAddress]"
+          }
         }
       }
     }
