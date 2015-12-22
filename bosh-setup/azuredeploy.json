@@ -14,10 +14,10 @@
         "description": "User name for the Virtual Machine."
       }
     },
-    "adminPassword": {
-      "type": "securestring",
+    "sshKeyData": {
+      "type": "string",
       "metadata": {
-        "description": "Password for the Virtual Machine."
+        "description": "SSH rsa public key file as a string."
       }
     },
     "tenantID": {
@@ -82,6 +82,7 @@
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
     "ubuntuOSVersion": "14.04.3-LTS",
+    "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
     "repository": "Azure",
     "branch": "master",
     "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
@@ -197,7 +198,17 @@
         "osProfile": {
           "computername": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -279,5 +290,11 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "sshDevBox": {
+      "type": "string",
+      "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', 'devbox')).dnsSettings.fqdn)]"
+    }
+  }
 }
