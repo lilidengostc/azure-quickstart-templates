@@ -22,23 +22,42 @@
     },
     "tenantID": {
       "type": "string",
-      "defaultValue": "TENANT-ID",
+      "minLength": 36,
+      "maxLength": 36,
       "metadata": {
         "description": "ID of the tenant. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
       }
     },
     "clientID": {
       "type": "string",
-      "defaultValue": "CLIENT-ID",
+      "minLength": 36,
+      "maxLength": 36,
       "metadata": {
         "description": "ID of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
       }
     },
     "clientSecret": {
       "type": "securestring",
-      "defaultValue": "CLIENT-SECRET",
       "metadata": {
         "description": "secret of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
+      }
+    },
+    "additionalStorageAccounts": {
+      "type": "string",
+      "defaultValue": "disabled",
+      "allowedValues": [
+        "enabled",
+        "disabled"
+      ],
+      "metadata": {
+        "description": "The flag allowing to create additional storage accounts."
+      }
+    },
+    "additionalStorageAccountsNumber": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The number of additional storage accounts. Please specify a positive number when additionalStorageAccounts is enabled."
       }
     },
     "azureDNS": {
@@ -63,18 +82,21 @@
   "variables": {
     "apiVersion": "2015-06-15",
     "location": "[resourceGroup().location]",
-    "newStorageAccountName": "[concat('cf', uniqueString(resourceGroup().id))]",
+
+    "defaultStorageAccountName": "[concat('cfdefaultsa', uniqueString(resourceGroup().id))]",
     "storageAccountType": "Standard_RAGRS",
     "vmStorageAccountContainerName": "vhds",
-    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', variables('newStorageAccountName'))]",
+    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', variables('defaultStorageAccountName'))]",
+
     "virtualNetworkName": "vnet",
-    "virtualNetworkAddressPrefix": "10.0.0.0/16",
+    "virtualNetworkAddressSpace": "10.0.0.0/16",
     "subnetNameForBosh": "Bosh",
-    "subnetAddressPrefixForBosh": "10.0.0.0/24",
+    "subnetAddressRangeForBosh": "10.0.0.0/24",
     "subnetNameForCloudFoundry": "CloudFoundry",
-    "subnetAddressPrefixForCloudFoundry": "10.0.16.0/20",
+    "subnetAddressRangeForCloudFoundry": "10.0.16.0/20",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "subnetRefForBosh": "[concat(variables('vnetID'),'/subnets/', variables('subnetNameForBosh'))]",
+
     "vmSize": "Standard_D1",
     "nicName": "[parameters('vmName')]",
     "devboxPrivateIPAddress": "10.0.0.100",
@@ -83,15 +105,19 @@
     "imageOffer": "UbuntuServer",
     "ubuntuOSVersion": "14.04.3-LTS",
     "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
-    "repository": "Azure",
-    "branch": "master",
-    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
-    "azureDNSTemplateUrl": "[concat(variables('githubPath'), 'azuredns-resources-', parameters('azureDNS'), '.json')]"
+
+    "repository": "bingosummer",
+    "branch": "develop",
+    "baseUri": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
+    "additionalStorageAccountsTemplate": "[concat('nested/additional-storage-accounts-', parameters('additionalStorageAccounts'), '.json')]",
+    "azureDNSTemplate": "[concat('nested/azuredns-', parameters('azureDNS'), '.json')]",
+
+    "exampleManifestBaseUri": "https://raw.githubusercontent.com/bingosummer/bosh-azure-cpi-release/update-docs-according-to-new-arm-template/docs/example_manifests/"
   },
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('newStorageAccountName')]",
+      "name": "[variables('defaultStorageAccountName')]",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
       "properties": {
@@ -136,20 +162,20 @@
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[variables('virtualNetworkAddressPrefix')]"
+            "[variables('virtualNetworkAddressSpace')]"
           ]
         },
         "subnets": [
           {
             "name": "[variables('subnetNameForBosh')]",
             "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefixForBosh')]"
+              "addressPrefix": "[variables('subnetAddressRangeForBosh')]"
             }
           },
           {
             "name": "[variables('subnetNameForCloudFoundry')]",
             "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefixForCloudFoundry')]"
+              "addressPrefix": "[variables('subnetAddressRangeForCloudFoundry')]"
             }
           }
         ]
@@ -188,7 +214,7 @@
       "name": "[parameters('vmName')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/',variables('newStorageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/',variables('defaultStorageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/',variables('nicName'))]"
       ],
       "properties": {
@@ -220,7 +246,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
+              "uri": "[concat('http://',variables('defaultStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -241,29 +267,46 @@
       "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]",
+        "Microsoft.Resources/deployments/additionalStorageAccounts"
       ],
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
+        "typeHandlerVersion": "1.4",
         "settings": {
           "fileUris": [
-            "[concat(variables('githubPath'),'launch_script.sh')]"
+            "[uri(variables('baseUri'), 'scripts/launch_script.sh')]",
+            "[uri(variables('baseUri'), 'scripts/setup_devbox.py')]",
+            "[uri(variables('baseUri'), 'scripts/create_cert.sh')]",
+            "[uri(variables('baseUri'), 'scripts/init.sh')]",
+            "[uri(variables('baseUri'), 'scripts/deploy_bosh.sh')]",
+            "[uri(variables('baseUri'), 'scripts/bosh.yml')]",
+            "[uri(variables('exampleManifestBaseUri'), 'single-vm-cf-224.yml')]",
+            "[uri(variables('exampleManifestBaseUri'), 'multiple-vm-cf-224.yml')]",
+            "[uri(variables('exampleManifestBaseUri'), 'cf-for-enterprise-224.yml')]"
           ],
-          "commandToExecute": "[concat('sh launch_script.sh',' ',variables('githubPath'))]",
-          "VNET-NAME": "[variables('virtualNetworkName')]",
-          "SUBNET-NAME": "[variables('subnetNameForBosh')]",
-          "SUBNET-NAME-FOR-CF": "[variables('subnetNameForCloudFoundry')]",
-          "SUBSCRIPTION-ID": "[subscription().subscriptionId]",
-          "STORAGE-ACCOUNT-NAME": "[variables('newStorageAccountName')]",
-          "STORAGE-ACCESS-KEY": "[listKeys(variables('storageid'),variables('apiVersion')).key1]",
-          "RESOURCE-GROUP-NAME": "[resourceGroup().name]",
-          "TENANT-ID": "[parameters('tenantID')]",
-          "CLIENT-ID": "[parameters('clientID')]",
-          "CLIENT-SECRET": "[parameters('clientSecret')]",
-          "cf-ip": "[reference('cloudfoundry').ipAddress]",
-          "username": "[parameters('adminUserName')]"
+          "enableInternalDNSCheck": false
+        },
+        "protectedSettings": {
+          "commandToExecute": "[concat('./launch_script.sh', ' ', '\"VNET_NAME:', variables('virtualNetworkName'), ';SUBNET_NAME_FOR_BOSH:', variables('subnetNameForBosh'), ';SUBNET_ADDRESS_RANGE_FOR_BOSH:', variables('subnetAddressRangeForBosh'), ';SUBNET_NAME_FOR_CLOUD_FOUNDRY:', variables('subnetNameForCloudFoundry'), ';SUBNET_ADDRESS_RANGE_FOR_CLOUD_FOUNDRY:', variables('subnetAddressRangeForCloudFoundry'), ';CLOUD_FOUNDRY_PUBLIC_IP:', reference('cloudfoundry').ipAddress, ';SUBSCRIPTION_ID:', subscription().subscriptionId, ';DEFAULT_STORAGE_ACCOUNT_NAME:', variables('defaultStorageAccountName'), ';RESOURCE_GROUP_NAME:', resourceGroup().name, ';ADDITIONAL_STORAGE_ACCOUNTS_PREFIX:', uniqueString(resourceGroup().id), ';ADDITIONAL_STORAGE_ACCOUNTS_NUMBER:', parameters('additionalStorageAccountsNumber'), '\" ', parameters('tenantID'), ' ', parameters('clientID'), ' \"', parameters('clientSecret'), '\" ', parameters('adminUserName'))]"
+        }
+      }
+    },
+    {
+      "name": "additionalStorageAccounts",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(variables('baseUri'), variables('additionalStorageAccountsTemplate'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "additionalStorageAccountsNumber": {
+            "value": "[int(parameters('additionalStorageAccountsNumber'))]"
+          }
         }
       }
     },
@@ -277,7 +320,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('azureDNSTemplateUrl')]",
+          "uri": "[uri(variables('baseUri'), variables('azureDNSTemplate'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -295,6 +338,10 @@
     "sshDevBox": {
       "type": "string",
       "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', 'devbox')).dnsSettings.fqdn)]"
+    },
+    "cloudFoundryIP": {
+      "type": "string",
+      "value": "[reference('cloudfoundry').ipAddress]"
     }
   }
 }

@@ -10,6 +10,27 @@
     },
     "sshKeyData": {
       "value": "GEN-SSH-PUB-KEY"
+    },
+    "tenantID": {
+      "value": "GEN-UNIQUE-36"
+    }
+    "clientID": {
+      "value": "GEN-UNIQUE-36"
+    },
+    "clientSecret": {
+      "value": "GEN-PASSWORD"
+    },
+    "additionalStorageAccounts": {
+      "value": "enabled"
+    },
+    "additionalStorageAccountsNumber": {
+      "value": 3
+    },
+    "azureDNS": {
+      "value": "enabled"
+    },
+    "systemDomainName": {
+      "value": "mslovelinux.com"
     }
   }
 }
