@@ -36,7 +36,11 @@
     "vmName": "[concat(variables('scenarioPrefix'),'VM')]",
     "virtualNetworkName": "[concat(variables('scenarioPrefix'),'Vnet')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "repository": "bingosummer",
+    "branch": "succeeded-before-all-nested-deployment-complete",
+    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/repro/')]",
+    "azureDNSTemplateUrl": "[concat(variables('githubPath'), 'azuredns-resources-enabled.json')]"
   },
   "resources": [
     {
