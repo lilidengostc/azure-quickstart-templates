@@ -27,14 +27,23 @@ install_log = os.path.join(home_dir, "install.log")
 # Prepare the containers
 storage_account_name = settings["STORAGE-ACCOUNT-NAME"]
 storage_access_key = settings["STORAGE-ACCESS-KEY"]
-blob_service = BlobService(storage_account_name, storage_access_key)
+service_host_base = settings["SERVICE-HOST-BASE"]
+blob_service = BlobService(
+    account_name=storage_account_name,
+    account_key=storage_access_key,
+    host_base='.blob.{0}'.format(service_host_base)
+)
 blob_service.create_container('bosh')
 blob_service.create_container(container_name='stemcell',
     x_ms_blob_public_access='blob'
 )
 
 # Prepare the table for storing meta datas of storage account and stemcells
-table_service = TableService(storage_account_name, storage_access_key)
+table_service = TableService(
+    account_name=storage_account_name,
+    account_key=storage_access_key,
+    host_base='.table.{0}'.format(service_host_base)
+)
 table_service.create_table('stemcells')
 
 # Generate the private key and certificate

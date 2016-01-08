@@ -1,18 +1,54 @@
-{
+﻿{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the Virtual Machine."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "User name for the Virtual Machine."
+      }
+    },
+    "clientID": {
+      "type": "string",
+      "defaultValue": "CLIENT-ID",
+      "metadata": {
+        "description": "ID of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
+      }
+    },
+    "clientSecret": {
+      "type": "securestring",
+      "defaultValue": "CLIENT-SECRET",
+      "metadata": {
+        "description": "secret of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
+      }
+    },
+    "dnsServerAddresses": {
+      "type": "array",
+      "metadata": {
+        "description": "The DNS address(es) of the DNS Server(s) used by the VNET"
+      }
+    },
+    "enableDNSOnDevbox": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "A default DNS will be setup in the devbox if it is true."
+      }
+    },
     "newStorageAccountName": {
       "type": "string",
       "metadata": {
         "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed. It must be between 3 and 24 characters in length and use numbers and lower-case letters only."
-      }
-    },
-    "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "boshvnet-crp",
-      "metadata": {
-        "description": "name of the virtual network"
       }
     },
     "subnetNameForBosh": {
@@ -29,6 +65,20 @@
         "description": "name of the subnet for CloudFoundy"
       }
     },
+    "tenantID": {
+      "type": "string",
+      "defaultValue": "TENANT-ID",
+      "metadata": {
+        "description": "ID of the tenant. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "boshvnet-crp",
+      "metadata": {
+        "description": "name of the virtual network"
+      }
+    },
     "vmName": {
       "type": "string",
       "metadata": {
@@ -37,7 +87,7 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_D1",
+      "defaultValue": "Standard_A1",
       "allowedValues": [
         "Standard_A1",
         "Standard_A2",
@@ -52,80 +102,44 @@
         "description": "Size of vm"
       }
     },
-    "adminUsername": {
+    "serviceHostBase" : {
       "type": "string",
+      "defaultValue": "core.windows.net",
       "metadata": {
-        "description": "User name for the Virtual Machine."
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Password for the Virtual Machine."
-      }
-    },
-    "enableDNSOnDevbox": {
-      "type": "bool",
-      "defaultValue": true,
-      "allowedValues": [
-        true,
-        false
-      ],
-      "metadata": {
-        "description": "A default DNS will be setup in the devbox if it is true."
-      }
-    },
-    "tenantID": {
-      "type": "string",
-      "defaultValue": "TENANT-ID",
-      "metadata": {
-        "description": "ID of the tenant. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
-      }
-    },
-    "clientID": {
-      "type": "string",
-      "defaultValue": "CLIENT-ID",
-      "metadata": {
-        "description": "ID of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
-      }
-    },
-    "clientSecret": {
-      "type": "securestring",
-      "defaultValue": "CLIENT-SECRET",
-      "metadata": {
-        "description": "secret of the client. See https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md"
+        "description": "Live host base url. Defaults to Azure url. Override this for on-premise."
       }
     }
   },
   "variables": {
-    "api-version": "2015-05-01-preview",
-    "location": "[resourceGroup().location]",
-    "storageAccountType": "Standard_GRS",
-    "vmStorageAccountContainerName": "vhds",
-    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', parameters('newStorageAccountName'))]",
-    "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "addressPrefix": "10.0.0.0/16",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "api-version": "2015-05-01-preview",
+    "branch": "azure-stack",
+    "devboxPrivateIPAddress": "10.0.0.100",
+    "devboxPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'),'-devbox'))]",
+    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
+    "imageOffer": "UbuntuServer",
+    "imagePublisher": "Canonical",
+    "location": "[resourceGroup().location]",
+    "networkSecurityGroupName": "networkSG",
+    "nicName": "[parameters('vmName')]",
+    "repository": "bingosummer",
+    "storageAccountType": "Standard_GRS",
+    "storageid": "[resourceId('Microsoft.Storage/storageAccounts', parameters('newStorageAccountName'))]",
     "subnet1Name": "[parameters('subnetNameForBosh')]",
     "subnet1Prefix": "10.0.0.0/24",
     "subnet1Ref": "[concat(variables('vnetID'),'/subnets/', variables('subnet1Name'))]",
     "subnet2Name": "[parameters('subnetNameForCloudFoundry')]",
     "subnet2Prefix": "10.0.16.0/24",
-    "nicName": "[parameters('vmName')]",
-    "devboxPrivateIPAddress": "10.0.0.100",
-    "devboxPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'),'-devbox'))]",
-    "imagePublisher": "Canonical",
-    "imageOffer": "UbuntuServer",
     "ubuntuOSVersion": "14.04.2-LTS",
-    "repository": "Azure",
-    "branch": "master",
-    "githubPath": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]"
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "vmStorageAccountContainerName": "vhds",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
   },
   "resources": [
     {
+      "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('newStorageAccountName')]",
-      "apiVersion": "[variables('api-version')]",
       "location": "[variables('location')]",
       "properties": {
         "accountType": "[variables('storageAccountType')]"
@@ -163,20 +177,53 @@
     },
     {
       "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow_all",
+            "properties": {
+              "description": "This is the first rule",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 123,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+      ],
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
             "[variables('addressPrefix')]"
           ]
         },
+        "dhcpOptions": {
+          "dnsServers": "[parameters('DNSServerAddresses')]"
+        },
         "subnets": [
           {
             "name": "[variables('subnet1Name')]",
             "properties": {
-              "addressPrefix": "[variables('subnet1Prefix')]"
+              "addressPrefix": "[variables('subnet1Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
             }
           },
           {
@@ -216,7 +263,7 @@
       }
     },
     {
-      "apiversion": "[variables('api-version')]",
+      "apiversion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
       "location": "[variables('location')]",
@@ -243,7 +290,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.azurestack.local/',variables('vmStorageAccountContainerName'),'/',parameters('vmName'),'-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -261,7 +308,7 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('vmName'),'/initdevbox')]",
-      "apiVersion": "[variables('api-version')]",
+      "apiVersion": "2015-06-15",
       "location": "[variables('location')]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
@@ -269,7 +316,7 @@
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
+        "typeHandlerVersion": "1.3",
         "settings": {
           "fileUris": [
             "[concat(variables('githubPath'),'launch_script.sh')]"
@@ -285,6 +332,7 @@
           "TENANT-ID": "[parameters('tenantID')]",
           "CLIENT-ID": "[parameters('clientID')]",
           "CLIENT-SECRET": "[parameters('clientSecret')]",
+          "SERVICE-HOST-BASE": "[parameters('serviceHostBase')]",
           "cf-ip": "[reference(concat(parameters('vmName'),'-cf')).ipAddress]",
           "username": "[parameters('adminUserName')]",
           "enable-dns": "[parameters('enableDNSOnDevbox')]"
