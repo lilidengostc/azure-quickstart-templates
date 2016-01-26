@@ -3,6 +3,7 @@ groups:
   - name: bosh-setup-template
     jobs:
       - minimum-parameters
+      - auto-deploy-bosh
 
 jobs:
 - name: minimum-parameters
