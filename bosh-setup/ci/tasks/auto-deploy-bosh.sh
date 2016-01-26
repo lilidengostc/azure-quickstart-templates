@@ -31,6 +31,9 @@ cat > parameters.json << EOF
     },
     "clientSecret": {
       "value": "${AZURE_CLIENT_SECRET}"
+    },
+    "autoDeployBosh": {
+      "value": "enabled"
     }
   }
 }

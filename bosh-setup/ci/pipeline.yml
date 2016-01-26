@@ -11,8 +11,24 @@ jobs:
   - aggregate:
     - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
 
-  - task: minimum-parameters
+  - task: deploy
     file: bosh-setup-template/bosh-setup/ci/tasks/minimum-parameters.yml
+    config:
+      params:
+        AZURE_CLIENT_ID:                {{azure_client_id}}
+        AZURE_CLIENT_SECRET:            {{azure_client_secret}}
+        AZURE_TENANT_ID:                {{azure_tenant_id}}
+        AZURE_REGION_NAME:              {{azure_region_name}}
+        SSH_KEY_DATA:                   {{ssh_key_data}}
+
+- name: auto-deploy-bosh
+  serial: true
+  plan:
+  - aggregate:
+    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
+
+  - task: deploy
+    file: bosh-setup-template/bosh-setup/ci/tasks/auto-deploy-bosh.yml
     config:
       params:
         AZURE_CLIENT_ID:                {{azure_client_id}}
