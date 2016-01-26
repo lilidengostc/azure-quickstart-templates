@@ -35,4 +35,8 @@ cat > parameters.json << EOF
   }
 }
 EOF
-azure group create -n "$UUID" -l "${AZURE_REGION_NAME}" -d "bosh-setup-template"  -f ./bosh-setup-template/bosh-setup/azuredeploy.json -e ./parameters.json -vv
+
+AZURE_GROUP_NAME=$UUID
+echo azure group create ${AZURE_GROUP_NAME} "${AZURE_REGION_NAME}"
+azure group create ${AZURE_GROUP_NAME} "${AZURE_REGION_NAME}"
+azure group deployment create ${AZURE_GROUP_NAME} --template-file ./bosh-setup-template/bosh-setup/azuredeploy.json --parameters-file ./parameters.json -vv
