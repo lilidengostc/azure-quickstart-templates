@@ -20,6 +20,21 @@ from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
 from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 
+LOG_DIR='/log/cloudera'
+
+def getParameterValue(vmsize, parameter):
+    log("vmsize: "+vmsize+", parameter:"+parameter)
+    switcher = {
+        "Standard_DS14:yarn_nodemanager_resource_cpu_vcores": "10",
+        "Standard_DS14:yarn_nodemanager_resource_memory_mb": "45056",
+        "Standard_DS14:impalad_memory_limit": "42949672960",
+        "Standard_DS13:yarn_nodemanager_resource_cpu_vcores": "5",
+        "Standard_DS13:yarn_nodemanager_resource_memory_mb": "20028",
+        "Standard_DS13:impalad_memory_limit": "21500000000"
+
+    }
+    return switcher.get(vmsize+":"+parameter, "0")
+
 def getDataDiskCount():
     bashCommand="lsblk | grep /data | grep -v /data/ | wc -l"
     client=SSHClient()
@@ -33,9 +48,22 @@ def getDataDiskCount():
 
     return count
 
+def setZookeeperOwnerDir(HA):
+    os.system("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
+    # setup other masters in HA environment
+    if HA:
+        client=SSHClient()
+        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
+        toconnect=socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn1")
+        client.connect(toconnect, username=cmx.ssh_root_user, password=cmx.ssh_root_password)
+        client.exec_command("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
+        toconnect=socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn2")
+        client.connect(toconnect, username=cmx.ssh_root_user, password=cmx.ssh_root_password)
+        client.exec_command("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
 
 
-LOG_DIR='/log/cloudera'
+
+
 def init_cluster():
     """
     Initialise Cluster
@@ -206,7 +234,8 @@ def setup_zookeeper(HA):
         
         service.update_config({"zookeeper_datadir_autocreate": True})
 
-
+        # Ensure zookeeper has access to folder
+        setZookeeperOwnerDir(HA)
 
         # Role Config Group equivalent to Service Default Group
         for rcg in [x for x in service.get_all_role_config_groups()]:
@@ -575,8 +604,8 @@ def setup_yarn(HA):
                 rcg.update_config({"yarn_nodemanager_heartbeat_interval_ms": "100",
                                    "node_manager_java_heapsize": "2000000000",
                                    "yarn_nodemanager_local_dirs": yarn_dir_list,
-                                   "yarn_nodemanager_resource_cpu_vcores": "10",
-                                   "yarn_nodemanager_resource_memory_mb": "45056",
+                                   "yarn_nodemanager_resource_cpu_vcores": getParameterValue(cmx.vmsize, "yarn_nodemanager_resource_cpu_vcores"),
+                                   "yarn_nodemanager_resource_memory_mb": getParameterValue(cmx.vmsize,"yarn_nodemanager_resource_memory_mb"),
                                    "node_manager_log_dir": LOG_DIR+"/hadoop-yarn",
                                    "yarn_nodemanager_log_dirs": LOG_DIR+"/hadoop-yarn/container"})
 #                for host in hosts:
@@ -812,7 +841,7 @@ def setup_impala(HA):
 
         impalad=service.get_role_config_group("{0}-IMPALAD-BASE".format(service_name))
         impalad.update_config({"log_dir": LOG_DIR+"/impalad",
-                               "impalad_memory_limit": "42949672960"})
+                               "impalad_memory_limit": getParameterValue(cmx.vmsize, "impalad_memory_limit")})
         #llama=service.get_role_config_group("{0}-LLAMMA-BASE".format(service_name))
         #llama.update_config({"log_dir": LOG_DIR+"impala-llama"})
         ss = service.get_role_config_group("{0}-STATESTORE-BASE".format(service_name))
@@ -1656,7 +1685,7 @@ def parse_options():
                           'username': 'cmadmin', 'password': 'cmpassword', 'cm_server': None,
                           'host_names': None, 'license_file': None, 'parcel': [], 'company': None,
                           'email': None, 'phone': None, 'fname': None, 'lname': None, 'jobrole': None,
-                          'jobfunction': None, 'do_post':True}
+                          'jobfunction': None, 'vmsize': None,'do_post':True}
 
     def cmx_args(option, opt_str, value, *args, **kwargs):
         if option.dest == 'host_names':
@@ -1766,6 +1795,8 @@ def parse_options():
                       callback=cmx_args, help='Set company')
     parser.add_option('-e', '--accept-eula', dest='accepted', action="store_true", default=False,
                       help='Must accept eula before install')
+    parser.add_option('-v', '--vmsize', dest='vmsize', type="string", action="callback",
+                      callback=cmx_args, help='provide vmsize for setup')
 
     (options, args) = parser.parse_args()
 

@@ -72,7 +72,7 @@
     "imagePublisher": "OpenLogic",
     "imageOffer": "CentOS",
     "imageSKU": "7.1",
-    "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/CentOS-2nics-lb-cluster/deploy.sh",
+    "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/centos-2nics-lb-cluster/deploy.sh",
     "customScriptCommandToExecute": "bash deploy.sh",
     "publicIPAddressName": "myPublicIP",
     "virtualNetworkName": "myVNET",
@@ -427,7 +427,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computername": "[concat('vm', copyIndex())]",
+          "computerName": "[concat('vm', copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
