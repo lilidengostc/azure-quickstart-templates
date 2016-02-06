@@ -25,6 +25,6 @@ resources:
 - name: bosh-setup-template
   type: git
   source:
-    uri: git@github.com:Azure/azure-quickstart-templates.git
-    branch: master
+    uri: git@github.com:bingosummer/azure-quickstart-templates.git
+    branch: develop
     private_key: {{github_deployment_key__bosh-setup-template}}

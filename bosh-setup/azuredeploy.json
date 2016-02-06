@@ -80,8 +80,8 @@
     "ubuntuOSVersion": "14.04.3-LTS",
     "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
 
-    "repository": "Azure",
-    "branch": "master",
+    "repository": "bingosummer",
+    "branch": "develop",
     "baseUri": "[concat('https://raw.githubusercontent.com/', variables('repository'), '/azure-quickstart-templates/', variables('branch'), '/bosh-setup/')]",
 
     "environment": "AzureCloud",
