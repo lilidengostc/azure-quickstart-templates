@@ -4,7 +4,7 @@ image: docker:///boshcpi/azure-cpi-release
 inputs:
   - name: bosh-setup-template
 run:
-  path: bosh-setup-template/bosh-setup/ci/tasks/minimum-parameters.sh
+  path: bosh-setup-template/bosh-setup/ci/tasks/deploy-template-autoDeployBosh.sh
 params:
     AZURE_CLIENT_ID:               replace-me
     AZURE_CLIENT_SECRET:           replace-me
