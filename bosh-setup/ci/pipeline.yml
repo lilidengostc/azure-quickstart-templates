@@ -1,114 +1,45 @@
 ---
 groups:
-  - name: bosh-setup-template
-    jobs:
-      - minimum-parameters
-      - auto-deploy-bosh
   - name: deploy-cf-e2e
     jobs:
-      - single
-      - multiple
-      - enterprise
-  - name: advanced
-    jobs:
-      - diego
+      - basic
 
 jobs:
-- name: minimum-parameters
+- name: basic
   serial: true
   plan:
   - aggregate:
     - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
 
-  - task: deploy
-    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-template-minimum.yml
+  - task: deploy-bosh
+    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-bosh.yml
     config:
       params:
         AZURE_CLIENT_ID:                {{azure_client_id}}
         AZURE_CLIENT_SECRET:            {{azure_client_secret}}
         AZURE_TENANT_ID:                {{azure_tenant_id}}
+        AZURE_GROUP_NAME:               {{azure_group_name}}
         AZURE_REGION_NAME:              {{azure_region_name}}
         SSH_KEY_DATA:                   {{ssh_key_data}}
 
-- name: auto-deploy-bosh
-  serial: true
-  plan:
-  - aggregate:
-    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
-
-  - task: deploy
-    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-template-autoDeployBosh.yml
-    config:
-      params:
-        AZURE_CLIENT_ID:                {{azure_client_id}}
-        AZURE_CLIENT_SECRET:            {{azure_client_secret}}
-        AZURE_TENANT_ID:                {{azure_tenant_id}}
-        AZURE_REGION_NAME:              {{azure_region_name}}
-        SSH_KEY_DATA:                   {{ssh_key_data}}
-
-- name: single
-  serial: true
-  plan:
-  - aggregate:
-    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
-
-  - task: deploy
+  - task: deploy-single-vm-cf
     file: bosh-setup-template/bosh-setup/ci/tasks/deploy-single-vm-cf.yml
     config:
       params:
         AZURE_CLIENT_ID:                {{azure_client_id}}
         AZURE_CLIENT_SECRET:            {{azure_client_secret}}
         AZURE_TENANT_ID:                {{azure_tenant_id}}
-        AZURE_REGION_NAME:              {{azure_region_name}}
-        SSH_KEY_DATA:                   {{ssh_key_data}}
+        AZURE_GROUP_NAME:               {{azure_group_name}}
 
-- name: multiple
-  serial: true
-  plan:
-  - aggregate:
-    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
-
-  - task: deploy
-    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-multiple-vm-cf.yml
+  - task: cleanup
+    file: bosh-setup-template/bosh-setup/ci/tasks/cleanup.yml
     config:
       params:
         AZURE_CLIENT_ID:                {{azure_client_id}}
         AZURE_CLIENT_SECRET:            {{azure_client_secret}}
         AZURE_TENANT_ID:                {{azure_tenant_id}}
-        AZURE_REGION_NAME:              {{azure_region_name}}
-        SSH_KEY_DATA:                   {{ssh_key_data}}
-
-- name: enterprise
-  serial: true
-  plan:
-  - aggregate:
-    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
-
-  - task: deploy
-    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-enterprise-cf.yml
-    config:
-      params:
-        AZURE_CLIENT_ID:                {{azure_client_id}}
-        AZURE_CLIENT_SECRET:            {{azure_client_secret}}
-        AZURE_TENANT_ID:                {{azure_tenant_id}}
-        AZURE_REGION_NAME:              {{azure_region_name}}
-        SSH_KEY_DATA:                   {{ssh_key_data}}
-
-- name: diego
-  serial: true
-  plan:
-  - aggregate:
-    - {trigger: false, get: bosh-setup-template, resource: bosh-setup-template}
-
-  - task: deploy
-    file: bosh-setup-template/bosh-setup/ci/tasks/deploy-diego.yml
-    config:
-      params:
-        AZURE_CLIENT_ID:                {{azure_client_id}}
-        AZURE_CLIENT_SECRET:            {{azure_client_secret}}
-        AZURE_TENANT_ID:                {{azure_tenant_id}}
-        AZURE_REGION_NAME:              {{azure_region_name}}
-        SSH_KEY_DATA:                   {{ssh_key_data}}
+        AZURE_GROUP_NAME:               {{azure_group_name}}
+        
 
 resources:
 - name: bosh-setup-template
