@@ -30,8 +30,8 @@
       "location": "[parameters('region')]",
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
+        "type": "CustomScriptForLinuxTest",
+        "typeHandlerVersion": "1.5",
         "settings": {
           "fileUris": "[parameters('osSettings').scripts]",
           "commandToExecute": "[concat('bash opscenter.sh -n \"', parameters('opsCenterSettings').clusterName , '\" -u ', parameters('adminUsername'), ' -p ', parameters('adminPassword'), ' -k ' , parameters('opsCenterSettings').adminPassword , ' -ed ', parameters('opsCenterSettings').nodeList)]"

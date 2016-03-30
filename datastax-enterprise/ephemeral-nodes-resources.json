@@ -155,8 +155,8 @@
       ],
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.4",
+        "type": "CustomScriptForLinuxTest",
+        "typeHandlerVersion": "1.5",
         "settings": {
           "fileUris": "[parameters('osSettings').scripts]",
           "commandToExecute": "bash dsenode.sh"
