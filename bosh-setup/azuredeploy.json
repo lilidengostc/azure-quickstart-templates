@@ -95,8 +95,8 @@
     "ubuntuOSVersion": "14.04.3-LTS",
     "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
 
-    "baseUriAzureCloud": "https://raw.githubusercontent.com/bingosummer/azure-quickstart-templates/dev/bosh-setup/",
-    "baseUriAzureChinaCloud": "https://cloudfoundry.blob.core.chinacloudapi.cn/",
+    "baseUriAzureCloud": "https://raw.githubusercontent.com/bingosummer/azure-quickstart-templates/use-github/bosh-setup/",
+    "baseUriAzureChinaCloud": "[parameters('baseUriAzureCloud')]",
 
     "filesToDownloadAzureCloud": [
       "[uri(variables('baseUriAzureCloud'), 'scripts/setup_env')]",
@@ -120,7 +120,7 @@
       "[uri(variables('baseUriAzureChinaCloud'), 'manifests/bosh.yml')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'manifests/single-vm-cf.yml')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'manifests/multiple-vm-cf.yml')]",
-      "[uri(variables('baseUriAzureChinaCloud'), 'cf-cli/cf.deb')]"
+      "http://go-cli.s3-website-us-east-1.amazonaws.com/releases/v6.14.1/cf-cli-installer_6.14.1_x86-64.deb"
     ],
     "filesToDownload": "[variables(concat('filesToDownload', parameters('environment')))]",
 
