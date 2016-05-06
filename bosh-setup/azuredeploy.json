@@ -96,7 +96,7 @@
     "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
 
     "baseUriAzureCloud": "https://raw.githubusercontent.com/bingosummer/azure-quickstart-templates/use-github/bosh-setup/",
-    "baseUriAzureChinaCloud": "[parameters('baseUriAzureCloud')]",
+    "baseUriAzureChinaCloud": "[variables('baseUriAzureCloud')]",
 
     "filesToDownloadAzureCloud": [
       "[uri(variables('baseUriAzureCloud'), 'scripts/setup_env')]",
