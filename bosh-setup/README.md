@@ -18,6 +18,11 @@ We look forward to hearing your feedback and suggestions!
 ```
 Template Changelog
 
+# v1.5.1 (2016-05-23)
+
+- Upgrade versions
+  - Upgrade Azure CPI version to v12. Please see new features in https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release
+
 # v1.5.0 (2016-05-23)
 
 - Upgrade versions
