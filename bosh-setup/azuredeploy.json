@@ -24,7 +24,8 @@
       "type": "string",
       "allowedValues": [
         "AzureCloud",
-        "AzureChinaCloud"
+        "AzureChinaCloud",
+        "AzureUSGovernment"
       ],
       "metadata": {
         "description": "Different environments in Azure. Choose AzureCloud for Global Azure, and choose AzureChinaCloud for Mooncake (Azure China Cloud)."
@@ -121,6 +122,7 @@
       "[uri(variables('baseUriAzureChinaCloud'), 'manifests/multiple-vm-cf.yml')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'cf-cli/cf.deb')]"
     ],
+    "filesToDownloadAzureUSGovernment": "[variables('filesToDownloadAzureCloud')]",
     "filesToDownload": "[variables(concat('filesToDownload', parameters('environment')))]",
 
     "environmentAzureCloud": {
@@ -144,6 +146,17 @@
       "stemcellSha1": "d71b1092f0edc68544f0e1796e75491d0d3678ce",
       "boshInitUrl": "[uri(variables('baseUriAzureChinaCloud'), 'bosh-init/bosh-init-0.0.81-linux-amd64')]",
       "cfReleaseUrl": "[uri(variables('baseUriAzureChinaCloud'), 'releases/cf-release-231.tgz')]"
+    },
+    "environmentAzureUSGovernment": {
+      "serviceHostBase": "core.usgovcloudapi.net",
+      "boshReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry/bosh?v=256.2",
+      "boshReleaseSha1": "ff2f4e16e02f66b31c595196052a809100cfd5a8",
+      "boshAzureCPIReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-azure-cpi-release?v=12",
+      "boshAzureCPIReleaseSha1": "180e44f14812f7dd365c9a13928ca97a192f5d74",
+      "stemcellUrl": "https://bosh.io/d/stemcells/bosh-azure-hyperv-ubuntu-trusty-go_agent?v=3232.5",
+      "stemcellSha1": "d71b1092f0edc68544f0e1796e75491d0d3678ce",
+      "boshInitUrl": "https://s3.amazonaws.com/bosh-init-artifacts/bosh-init-0.0.81-linux-amd64",
+      "cfReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry/cf-release?v=231"
     },
     "environment": "[variables(concat('environment', parameters('environment')))]",
 
