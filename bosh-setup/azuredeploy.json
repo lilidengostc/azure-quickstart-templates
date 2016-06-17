@@ -110,7 +110,7 @@
       "http://go-cli.s3-website-us-east-1.amazonaws.com/releases/v6.14.1/cf-cli-installer_6.14.1_x86-64.deb"
     ],
     "filesToDownloadAzureChinaCloud": [
-      "[uri(variables('baseUriAzureChinaCloud'), 'scripts/setup_env')]",
+      "http://binxicfmultivm.blob.core.windows.net/scripts/setup_env",
       "[uri(variables('baseUriAzureChinaCloud'), 'scripts/setup_env.py')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'scripts/create_cert.sh')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'scripts/init.sh')]",
