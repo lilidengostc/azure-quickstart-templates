@@ -204,7 +204,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": "[split(parameters('fileUris'), ' ')]",
-          "commandToExecute": "TestEnv=foo [parameters('commandToExecute')]"
+          "commandToExecute": "[parameters('commandToExecute')]"
         }
       }
     }
