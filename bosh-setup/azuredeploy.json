@@ -24,7 +24,8 @@
       "type": "string",
       "allowedValues": [
         "AzureCloud",
-        "AzureChinaCloud"
+        "AzureChinaCloud",
+        "AzureStack"
       ],
       "metadata": {
         "description": "Different environments in Azure. Choose AzureCloud for Global Azure, and choose AzureChinaCloud for Mooncake (Azure China Cloud)."
@@ -68,7 +69,7 @@
     "apiVersion": "2015-06-15",
 
     "defaultStorageAccountName": "[concat(uniqueString(resourceGroup().id), 'cfdefaultsa')]",
-    "storageAccountType": "Standard_RAGRS",
+    "storageAccountType": "Standard_LRS",
     "vmStorageAccountContainerName": "vhds",
     "storageid": "[resourceId('Microsoft.Storage/storageAccounts', variables('defaultStorageAccountName'))]",
 
@@ -84,7 +85,7 @@
     "boshNetworkSecurityGroup": "nsg-bosh",
     "cfNetworkSecurityGroup": "nsg-cf",
 
-    "vmSize": "Standard_D1",
+    "vmSize": "Standard_A1",
     "nicName": "[parameters('vmName')]",
     "devboxPrivateIPAddress": "10.0.0.100",
     "imagePublisher": "Canonical",
@@ -119,6 +120,7 @@
       "[uri(variables('baseUriAzureChinaCloud'), 'manifests/multiple-vm-cf.yml')]",
       "[uri(variables('baseUriAzureChinaCloud'), 'cf-cli/cf.deb')]"
     ],
+    "filesToDownloadAzureStack": "[variables('filesToDownloadAzureCloud')]",
     "filesToDownload": "[variables(concat('filesToDownload', parameters('environment')))]",
 
     "environmentAzureCloud": {
@@ -153,6 +155,26 @@
       "stemcellSha1": "575a284a3e314a5e1dc78fed8ff73e8a1da9b78b",
       "boshInitUrl": "http://mirror.azure.cn/bosh/bosh-init/bosh-init-0.0.95-linux-amd64",
       "cfReleaseUrl": "http://mirror.azure.cn/bosh/cf/cf-release-238.tgz",
+      "cfReleaseSha1": "fa6d35300f4fcd74a75fd8c7138f592acfcb32b0",
+      "diegoReleaseUrl": "http://mirror.azure.cn/bosh/diego/v0.1476.0/diego-0.1476.0.tgz",
+      "diegoReleaseSha1": "fd9db50053423cb15aa994b2a1e4d2c0aa89e695",
+      "gardenReleaseUrl": "http://mirror.azure.cn/bosh/diego/v0.1476.0/garden-linux-0.338.0.tgz",
+      "gardenReleaseSha1": "432225d88edc9731be4453cb61eba33fa829ebdc",
+      "cflinuxfs2ReleaseUrl": "http://mirror.azure.cn/bosh/diego/v0.1477.0/cflinuxfs2-rootfs-1.16.0.tgz",
+      "cflinuxfs2ReleaseSha1": "acfa1c4aad1fa9ef4623bf189cbab788a53f678e"
+    },
+    "environmentAzureStack": {
+      "serviceHostBase": "azurestack.local",
+      "secondaryDNS": "8.8.8.8",
+      "dnsRecursor": "192.168.200.3",
+      "boshReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry/bosh?v=256.2",
+      "boshReleaseSha1": "ff2f4e16e02f66b31c595196052a809100cfd5a8",
+      "boshAzureCPIReleaseUrl": "https://cloudfoundry.blob.core.windows.net/azurestack/bosh-azure-cpi-13-azurestack.1.tgz",
+      "boshAzureCPIReleaseSha1": "438ac0678d2f7a266ae2a30a8f53e8f30bf12f7d",
+      "stemcellUrl": "https://bosh.io/d/stemcells/bosh-azure-hyperv-ubuntu-trusty-go_agent?v=3232.4",
+      "stemcellSha1": "122a1afc1a3a6da78818422fe36ee08608b2c820",
+      "boshInitUrl": "https://s3.amazonaws.com/bosh-init-artifacts/bosh-init-0.0.95-linux-amd64",
+      "cfReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry/cf-release?v=238",
       "cfReleaseSha1": "fa6d35300f4fcd74a75fd8c7138f592acfcb32b0",
       "diegoReleaseUrl": "http://mirror.azure.cn/bosh/diego/v0.1476.0/diego-0.1476.0.tgz",
       "diegoReleaseSha1": "fd9db50053423cb15aa994b2a1e4d2c0aa89e695",
@@ -372,6 +394,9 @@
             "[variables('virtualNetworkAddressSpace')]"
           ]
         },
+        "dhcpOptions": {
+          "dnsServers": ["192.168.200.3","8.8.8.8"]
+        },
         "subnets": [
           {
             "name": "[variables('subnetNameForBosh')]",
@@ -483,7 +508,7 @@
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.4",
+        "typeHandlerVersion": "1.5",
         "settings": {
           "fileUris": "[variables('filesToDownload')]",
           "enableInternalDNSCheck": false,

@@ -18,7 +18,7 @@ def prepare_storage(settings):
     storage_access_key = settings["STORAGE_ACCESS_KEY"]
     endpoint_suffix = settings["SERVICE_HOST_BASE"]
 
-    blob_service = AppendBlobService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix)
+    blob_service = AppendBlobService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix, protocol="http")
     blob_service.create_container('bosh')
     blob_service.create_container(
         container_name='stemcell',
@@ -26,7 +26,7 @@ def prepare_storage(settings):
     )
 
     # Prepare the table for storing meta datas of storage account and stemcells
-    table_service = TableService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix)
+    table_service = TableService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix, protocol="http")
     table_service.create_table('stemcells')
 
 def render_bosh_manifest(settings):
@@ -39,6 +39,7 @@ def render_bosh_manifest(settings):
 
     ntp_servers_maps = {
         "AzureCloud": "0.north-america.pool.ntp.org",
+        "AzureStack": "0.north-america.pool.ntp.org",
         "AzureChinaCloud": "1.cn.pool.ntp.org, 1.asia.pool.ntp.org, 0.asia.pool.ntp.org"
     }
     environment = settings["ENVIRONMENT"]
@@ -98,6 +99,7 @@ def get_cloud_foundry_configuration(scenario, settings, bosh_director_ip):
 
     dns_maps = {
         "AzureCloud": "168.63.129.16, {0}".format(settings["SECONDARY_DNS"]),
+        "AzureStack": "192.168.200.3, 8.8.8.8",
         "AzureChinaCloud": bosh_director_ip
     }
     environment = settings["ENVIRONMENT"]
