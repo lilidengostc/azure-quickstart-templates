@@ -18,7 +18,7 @@ networks:
   subnets: # You need to update the subnet configuration if you change to another subnet
   - range: REPLACE_WITH_SUBNET_ADDRESS_RANGE_FOR_BOSH
     gateway: REPLACE_WITH_GATEWAY_IP
-    dns: [168.63.129.16, REPLACE_WITH_SECONDARY_DNS]
+    dns: [192.168.200.3, REPLACE_WITH_SECONDARY_DNS]
     cloud_properties:
       virtual_network_name: REPLACE_WITH_VNET_NAME # Replace with virtual network name
       subnet_name: REPLACE_WITH_SUBNET_NAME_FOR_BOSH # Replace with subnet name for BOSH VM
@@ -30,7 +30,7 @@ resource_pools:
     url: REPLACE_WITH_STEMCELL_URL
     sha1: REPLACE_WITH_STEMCELL_SHA1
   cloud_properties:
-    instance_type: Standard_D1
+    instance_type: Standard_A2
 
 disk_pools:
 - name: disks
@@ -122,6 +122,11 @@ jobs:
       ssh_user: vcap
       ssh_public_key: REPLACE_WITH_SSH_PUBLIC_KEY
       default_security_group: REPLACE_WITH_NSG_NAME_FOR_BOSH
+      azure_stack_resource: https://api.azurestack.local/REPLACE_WITH_GUID
+      default_security_group: nsg-bosh
+      environment: AzureStack
+      azure_stack_domain: azurestack.local
+      azure_stack_authentication: AzureAAD
 
     agent: {mbus: "nats://nats:REPLACE_WITH_NATS_PASSWORD@REPLACE_WITH_BOSH_DIRECTOR_IP:4222"}
 
