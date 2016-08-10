@@ -33,7 +33,7 @@ resource_pools:
     name: bosh-azure-hyperv-ubuntu-trusty-go_agent
     version: latest
   cloud_properties:
-    instance_type: Standard_D1
+    instance_type: Standard_A1
     security_group: REPLACE_WITH_NSG_NAME_FOR_CLOUD_FOUNDRY
 
 compilation:
@@ -41,7 +41,7 @@ compilation:
   network: cf_private
   reuse_compilation_vms: true
   cloud_properties:
-    instance_type: Standard_D1
+    instance_type: Standard_A1
 
 update:
   canaries: 1
