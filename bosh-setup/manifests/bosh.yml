@@ -122,7 +122,7 @@ jobs:
       ssh_user: vcap
       ssh_public_key: REPLACE_WITH_SSH_PUBLIC_KEY
       default_security_group: REPLACE_WITH_NSG_NAME_FOR_BOSH
-      azure_stack_resource: https://api.azurestack.local/REPLACE_WITH_GUID
+      azure_stack_resource: REPLACE_WITH_AZURE_STACK_RESOURCE
       default_security_group: nsg-bosh
       environment: AzureStack
       azure_stack_domain: azurestack.local

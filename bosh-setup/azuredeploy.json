@@ -63,6 +63,12 @@
       "metadata": {
         "description": "The flag allowing to deploy Bosh automatically or not"
       }
+    },
+    "azureStackResource": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource of the Azure Stack deployment. Use Azure Powershell command: (Invoke-RestMethod -Uri https://api.azurestack.local/metadata/endpoints?api-version=1.0 -Method Get).authentication.audiences[0]"
+      }
     }
   },
   "variables": {
@@ -543,7 +549,8 @@
           "CFLINUXFS2_RELEASE_SHA1": "[variables('environment').cflinuxfs2ReleaseSha1]",
           "BOSH_INIT_URL": "[variables('environment').boshInitUrl]",
           "KEEP_UNREACHABLE_VMS": "[variables('keepUnreachableVMs')]",
-          "AUTO_DEPLOY_BOSH": "[parameters('autoDeployBosh')]"
+          "AUTO_DEPLOY_BOSH": "[parameters('autoDeployBosh')]",
+          "AZURE_STACK_RESOURCE": "[parameters('azureStackResource')]"
         },
         "protectedSettings": {
           "commandToExecute": "[concat('bash -l -c \"./setup_env', ' ', parameters('tenantID'), ' ', parameters('clientID'), ' \"', parameters('clientSecret'), '\" >/home/', parameters('adminUsername'), '/install.log 2>&1\"')]"

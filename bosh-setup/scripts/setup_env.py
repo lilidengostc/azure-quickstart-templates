@@ -65,6 +65,7 @@ def render_bosh_manifest(settings):
             "CLIENT_SECRET",
             "BOSH_PUBLIC_IP",
             "NSG_NAME_FOR_BOSH",
+            "AZURE_STACK_RESOURCE",
             "BOSH_RELEASE_URL",
             "BOSH_RELEASE_SHA1",
             "BOSH_AZURE_CPI_RELEASE_URL",
