@@ -166,7 +166,7 @@
     "environmentAzureStack": {
       "serviceHostBase": "azurestack.local",
       "secondaryDNS": "8.8.8.8",
-      "dnsRecursor": "192.168.200.3",
+      "dnsRecursor": "192.168.200.6",
       "boshReleaseUrl": "https://bosh.io/d/github.com/cloudfoundry/bosh?v=256.2",
       "boshReleaseSha1": "ff2f4e16e02f66b31c595196052a809100cfd5a8",
       "boshAzureCPIReleaseUrl": "https://cloudfoundry.blob.core.windows.net/azurestack/bosh-azure-cpi-13-azurestack.1.tgz",
@@ -394,9 +394,6 @@
             "[variables('virtualNetworkAddressSpace')]"
           ]
         },
-        "dhcpOptions": {
-          "dnsServers": ["192.168.200.3","8.8.8.8"]
-        },
         "subnets": [
           {
             "name": "[variables('subnetNameForBosh')]",
@@ -553,15 +550,5 @@
         }
       }
     }
-  ],
-  "outputs": {
-    "sshDevBox": {
-      "type": "string",
-      "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', parameters('vmName'), '-devbox')).dnsSettings.fqdn)]"
-    },
-    "cloudFoundryIP": {
-      "type": "string",
-      "value": "[reference(concat(parameters('vmName'),'-cf')).ipAddress]"
-    }
-  }
+  ]
 }
