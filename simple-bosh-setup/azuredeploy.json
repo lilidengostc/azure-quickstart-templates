@@ -1,0 +1,198 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {},
+  "variables": {
+    "prefix": "[uniqueString(resourceGroup().id)]",
+    "virtualNetworkName": "boshvnet-crp",
+    "virtualNetworkAddressSpace": "10.0.0.0/16",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetNameForBosh": "Bosh",
+    "subnetAddressRangeForBosh": "10.0.0.0/24",
+    "subnetRefForBosh": "[concat(variables('vnetID'), '/subnets/', variables('subnetNameForBosh'))]",
+    "subnetNameForCloudFoundry": "CloudFoundry",
+    "subnetAddressRangeForCloudFoundry": "10.0.16.0/20",
+    "boshNetworkSecurityGroup": "nsg-bosh",
+    "cfNetworkSecurityGroup": "nsg-cf"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('boshNetworkSecurityGroup')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "ssh",
+            "properties": {
+              "description": "Allow SSH",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "bosh-agent",
+            "properties": {
+              "description": "Allow bosh-agent",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "6868",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "bosh-director",
+            "properties": {
+              "description": "Allow bosh-director",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "25555",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "dns",
+            "properties": {
+              "description": "Allow DNS",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "53",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('cfNetworkSecurityGroup')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "cf-https",
+            "properties": {
+              "description": "Allow cf-https",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "cf-log",
+            "properties": {
+              "description": "Allow cf-log",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "4443",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "cf-http",
+            "properties": {
+              "description": "Allow cf-http",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 202,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "cf-ssh",
+            "properties": {
+              "description": "Allow cf-ssh",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "2222",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 203,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('prefix'), '-bosh')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "static"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('prefix'), '-cf')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "static"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('virtualNetworkAddressSpace')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetNameForBosh')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetAddressRangeForBosh')]"
+            }
+          },
+          {
+            "name": "[variables('subnetNameForCloudFoundry')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetAddressRangeForCloudFoundry')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
