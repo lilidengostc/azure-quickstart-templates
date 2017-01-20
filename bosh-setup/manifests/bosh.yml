@@ -125,7 +125,7 @@ jobs:
       azure_stack_resource: REPLACE_WITH_AZURE_STACK_RESOURCE
       default_security_group: nsg-bosh
       environment: AzureStack
-      azure_stack_domain: azurestack.local
+      azure_stack_domain: REPLACE_WITH_AZURE_STACK_DOMAIN
       azure_stack_authentication: AzureAAD
 
     agent: {mbus: "nats://nats:REPLACE_WITH_NATS_PASSWORD@REPLACE_WITH_BOSH_DIRECTOR_IP:4222"}
