@@ -113,7 +113,7 @@
     "ubuntuOSVersion": "14.04.3-LTS",
     "sshKeyPath": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
 
-    "baseUriAzureCloud": "https://raw.githubusercontent.com/cerdmann-pivotal/azure-quickstart-templates/concourse-update/concourse-ci/",
+    "baseUriAzureCloud": "https://raw.githubusercontent.com/bingosummer/azure-quickstart-templates/pr-concourse/concourse-ci/",
 
     "filesToDownloadAzureCloud": [
       "[uri(variables('baseUriAzureCloud'), 'scripts/setup_env')]",
