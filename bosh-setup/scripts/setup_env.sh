@@ -87,7 +87,7 @@ cp "$bosh_key.pub" $home_dir
 
 echo "Start to replace cert varialbes for manifests..."
 chmod +x replace_certs.sh
-./replace_certs.sh
+./replace_certs.sh $environment
 
 echo "Start to run setup_env.py..."
 python setup_env.py ${tenant_id} ${client_id} ${client_secret} ${custom_data_file}
@@ -103,12 +103,18 @@ cp deploy_bosh.sh $home_dir
 chmod +x deploy_cloudfoundry.sh
 cp deploy_cloudfoundry.sh $home_dir
 cp utils.sh $home_dir
+
 example_manifests="$home_dir/example_manifests"
 mkdir -p $example_manifests
-cp single-vm-cf.yml $example_manifests 
-cp multiple-vm-cf.yml $example_manifests
-chmod 644 $example_manifests/single-vm-cf.yml
-chmod 644 $example_manifests/multiple-vm-cf.yml
+if [ "$environment" = "AzureStack" ]; then
+  cp multiple-vm-cf-on-azurestack.yml $example_manifests/multiple-vm-cf.yml
+  chmod 644 $example_manifests/multiple-vm-cf.yml
+else
+  cp single-vm-cf.yml $example_manifests 
+  cp multiple-vm-cf.yml $example_manifests
+  chmod 644 $example_manifests/single-vm-cf.yml
+  chmod 644 $example_manifests/multiple-vm-cf.yml
+fi
 
 cp cf* $home_dir
 bosh_init_url=$(get_setting BOSH_INIT_URL)

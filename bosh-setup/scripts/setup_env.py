@@ -18,8 +18,11 @@ def prepare_storage(settings):
     default_storage_account_name = settings["DEFAULT_STORAGE_ACCOUNT_NAME"]
     storage_access_key = settings["DEFAULT_STORAGE_ACCESS_KEY"]
     endpoint_suffix = settings["SERVICE_HOST_BASE"]
+    protocol = "https"
+    if settings["ENVIRONMENT"] == "AzureStack":
+        protocol = "http"
 
-    blob_service = AppendBlobService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix)
+    blob_service = AppendBlobService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix, protocol=protocol)
     blob_service.create_container('bosh')
     blob_service.create_container(
         container_name='stemcell',
@@ -27,7 +30,7 @@ def prepare_storage(settings):
     )
 
     # Prepare the table for storing meta datas of storage account and stemcells
-    table_service = TableService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix)
+    table_service = TableService(account_name=default_storage_account_name, account_key=storage_access_key, endpoint_suffix=endpoint_suffix, protocol=protocol)
     table_service.create_table('stemcells')
 
 # file_path: String. The path to the file in which some configs starting with 'REPLACE_WITH_' need to be replaced with the actual values.
@@ -43,7 +46,7 @@ def render_file(file_path, keys, values):
             tmpfile.write(contents)
         return True
     except Exception as e:
-        print("render_file - {0}: {1}".format(file_path, e.strerror))
+        print("render_file - {0}: {1}".format(file_path, str(e)))
         return False
 
 def render_bosh_manifest(settings):
@@ -58,7 +61,8 @@ def render_bosh_manifest(settings):
         "AzureCloud": "0.north-america.pool.ntp.org",
         "AzureChinaCloud": "1.cn.pool.ntp.org, 1.asia.pool.ntp.org, 0.asia.pool.ntp.org",
         "AzureUSGovernment": "0.north-america.pool.ntp.org",
-        "AzureGermanCloud": "0.europe.pool.ntp.org"
+        "AzureGermanCloud": "0.europe.pool.ntp.org",
+        "AzureStack": "0.north-america.pool.ntp.org"
     }
     environment = settings["ENVIRONMENT"]
     ntp_servers = ntp_servers_maps[environment]
@@ -67,7 +71,8 @@ def render_bosh_manifest(settings):
         "AzureCloud": "127.0.0.1",
         "AzureChinaCloud": bosh_director_ip,
         "AzureUSGovernment": "127.0.0.1",
-        "AzureGermanCloud": "127.0.0.1"
+        "AzureGermanCloud": "127.0.0.1",
+        "AzureStack": "127.0.0.1"
     }
     postgres_address = postgres_address_maps[environment]
 
@@ -98,7 +103,9 @@ def render_bosh_manifest(settings):
         "GATEWAY_IP",
         "BOSH_DIRECTOR_IP",
         "NTP_SERVERS",
-        "POSTGRES_ADDRESS"
+        "POSTGRES_ADDRESS",
+        "AZURE_STACK_RESOURCE",
+        "AZURE_STACK_DOMAIN"
     ]
     values = settings.copy()
     values["SSH_PUBLIC_KEY"] = ssh_public_key
@@ -111,12 +118,13 @@ def render_bosh_manifest(settings):
 
     return bosh_director_ip
 
-def get_cloud_foundry_configuration(scenario, settings, bosh_director_ip):
+def get_cloud_foundry_configuration(settings, bosh_director_ip):
     dns_maps = {
         "AzureCloud": "168.63.129.16\n    - {0}".format(settings["SECONDARY_DNS"]),
         "AzureChinaCloud": bosh_director_ip,
         "AzureUSGovernment": "168.63.129.16\n    - {0}".format(settings["SECONDARY_DNS"]),
-        "AzureGermanCloud": "168.63.129.16\n    - {0}".format(settings["SECONDARY_DNS"])
+        "AzureGermanCloud": "168.63.129.16\n    - {0}".format(settings["SECONDARY_DNS"]),
+        "AzureStack": "168.63.129.16\n    - {0}".format(settings["SECONDARY_DNS"])
     }
 
     config = {}
@@ -138,10 +146,15 @@ def get_cloud_foundry_configuration(scenario, settings, bosh_director_ip):
     return config
 
 def render_cloud_foundry_manifest(settings, bosh_director_ip):
-    for scenario in ["single-vm-cf", "multiple-vm-cf"]:
-        cloudfoundry_template = "{0}.yml".format(scenario)
-        config = get_cloud_foundry_configuration(scenario, settings, bosh_director_ip)
+    if settings["ENVIRONMENT"] == "AzureStack":
+        cloudfoundry_template = "multiple-vm-cf-on-azurestack.yml"
+        config = get_cloud_foundry_configuration(settings, bosh_director_ip)
         render_file(cloudfoundry_template, config.keys(), config)
+    else:
+        for scenario in ["single-vm-cf", "multiple-vm-cf"]:
+            cloudfoundry_template = "{0}.yml".format(scenario)
+            config = get_cloud_foundry_configuration(settings, bosh_director_ip)
+            render_file(cloudfoundry_template, config.keys(), config)
 
 def render_bosh_deployment_cmd(bosh_director_ip):
     keys = ["BOSH_DIRECOT_IP"]

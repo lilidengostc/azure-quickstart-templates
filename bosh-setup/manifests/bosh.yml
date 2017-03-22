@@ -130,6 +130,13 @@ jobs:
       ssh_user: vcap
       ssh_public_key: REPLACE_WITH_SSH_PUBLIC_KEY
       default_security_group: REPLACE_WITH_NSG_NAME_FOR_BOSH
+      azure_stack:
+        domain: REPLACE_WITH_AZURE_STACK_DOMAIN
+        authentication: AzureAD
+        resource: REPLACE_WITH_AZURE_STACK_RESOURCE
+        endpoint_prefix: management
+        skip_ssl_validation: true
+        use_http_to_access_storage_account: true
 
     agent: {mbus: "nats://nats:REPLACE_WITH_NATS_PASSWORD@REPLACE_WITH_BOSH_DIRECTOR_IP:4222"}
 
